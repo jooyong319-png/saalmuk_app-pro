@@ -1,8 +1,9 @@
 import { ToastProvider } from "../components/community/Toast";
+import { FollowProvider } from "../components/community/FollowContext";
 import AllChannelsContent from "../components/community/AllChannelsContent";
+import FeedContent from "../components/community/FeedContent";
 import RecentChannelsContent from "../components/community/RecentChannelsContent";
-import FollowingContent from "../components/community/FollowingContent";
-import HotContent from "../components/community/HotContent";
+import CommunityRankingContent from "../components/community/CommunityRankingContent";
 
 // ===== 애니메이션 스타일 =====
 const animationStyles = `
@@ -41,14 +42,14 @@ function CommunityContent({ setCurrentPage, communityNav }: CommunityProps) {
   switch (communityNav) {
     case "all":
       return <AllChannelsContent setCurrentPage={setCurrentPage} />;
-    case "recent":
-      return <RecentChannelsContent setCurrentPage={setCurrentPage} />;
-    case "hot":
-      return <HotContent setCurrentPage={setCurrentPage} />;
-    case "following":
+    case "feed":
+      return <FeedContent setCurrentPage={setCurrentPage} />;
     case "interest":
+      return <RecentChannelsContent setCurrentPage={setCurrentPage} />;
+    case "ranking":
+      return <CommunityRankingContent setCurrentPage={setCurrentPage} />;
     default:
-      return <FollowingContent setCurrentPage={setCurrentPage} />;
+      return <FeedContent setCurrentPage={setCurrentPage} />;
   }
 }
 
@@ -59,11 +60,13 @@ export default function Community({
 }: CommunityProps) {
   return (
     <ToastProvider>
-      <style>{animationStyles}</style>
-      <CommunityContent
-        setCurrentPage={setCurrentPage}
-        communityNav={communityNav}
-      />
+      <FollowProvider>
+        <style>{animationStyles}</style>
+        <CommunityContent
+          setCurrentPage={setCurrentPage}
+          communityNav={communityNav}
+        />
+      </FollowProvider>
     </ToastProvider>
   );
 }

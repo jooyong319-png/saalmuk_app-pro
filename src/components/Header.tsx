@@ -91,7 +91,6 @@ interface HeaderProps {
 
   // 중앙 (타이틀)
   title?: string;
-  subtitle?: string;
   logo?: boolean;
   customTitle?: ReactNode;
 
@@ -118,7 +117,6 @@ export default function Header({
   onMenuClick,
   onBackClick,
   title,
-  subtitle,
   logo = false,
   customTitle,
   showSearch = true,
@@ -143,8 +141,10 @@ export default function Header({
       {/* 좌측 */}
       <div className="flex items-center gap-3">
         {leftType === "menu" && (
-          <button className="p-1" onClick={onMenuClick}>
+          <button className="p-1 relative" onClick={onMenuClick}>
             <MenuIcon />
+            {/* 알림 빨간 점 */}
+            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
           </button>
         )}
         {leftType === "back" && (
@@ -165,9 +165,6 @@ export default function Header({
         ) : title ? (
           <div>
             <span className="text-lg font-bold text-gray-900">{title}</span>
-            {subtitle && (
-              <p className="text-[10px] text-gray-400">{subtitle}</p>
-            )}
           </div>
         ) : null}
       </div>
@@ -250,42 +247,49 @@ export function CommunityHeader({
 }: CommunityHeaderProps) {
   const getTitle = () => {
     switch (communityNav) {
+      case "feed":
+      case "hot":
+        return "피드";
       case "all":
-        return "커뮤니티";
+        return "갤러리";
       case "recent":
         return "최근 방문";
       case "following":
         return "팔로잉";
       case "interest":
         return "관심 게임";
-      case "hot":
-        return "🔥 지금 핫한";
+      case "ranking":
+        return "순위";
       default:
-        return "커뮤니티";
+        return "피드";
     }
   };
 
-  const getSubtitle = () => {
-    switch (communityNav) {
-      case "following":
-        return "팔로우한 유저들의 최신 글";
-      case "interest":
-        return "관심 등록한 게임의 최신 글";
-      case "hot":
-        return "조회수가 높은 인기 게시글";
-      case "recent":
-        return "최근에 방문한 갤러리";
-      default:
-        return undefined;
-    }
-  };
+  // ranking일 때 별도 헤더
+  if (communityNav === "ranking") {
+    return (
+      <Header
+        leftType="menu"
+        onMenuClick={onMenuClick}
+        showSearch={false}
+        showBell={false}
+        customRight={
+          <button
+            className="text-sm text-gray-500"
+            onClick={() => window.dispatchEvent(new Event("openRankingInfo"))}
+          >
+            안내
+          </button>
+        }
+      />
+    );
+  }
 
   return (
     <Header
       leftType="menu"
       onMenuClick={onMenuClick}
       title={getTitle()}
-      subtitle={getSubtitle()}
       showSearch
       showBell
       onSearchClick={onSearchClick}
@@ -307,8 +311,7 @@ export function RankingHeader({
     <Header
       leftType="menu"
       onMenuClick={onMenuClick}
-      title="쌀먹순위"
-      subtitle="투명한 데이터 기반 게임 랭킹"
+      title="게임순위"
       showSearch
       showBell
       onSearchClick={onSearchClick}
@@ -416,6 +419,7 @@ export const PAGES_WITHOUT_HEADER = [
   "pointWithdraw",
   "gifticonExchange",
   "signup",
+  "chat",
 ];
 
 export const shouldShowMainHeader = (currentPage: string): boolean => {
@@ -424,6 +428,7 @@ export const shouldShowMainHeader = (currentPage: string): boolean => {
   if (currentPage.includes("dailyEventDetail")) return false;
   if (currentPage.includes("tradeDetail")) return false;
   if (currentPage.includes("purchaseDetail")) return false;
+  if (currentPage.startsWith("gallery-")) return false; // 갤러리 상세 페이지
   return true;
 };
 

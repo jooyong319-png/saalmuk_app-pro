@@ -3,14 +3,17 @@ type CashChargeProps = {
   goBack?: () => void;
 };
 
-export default function CashCharge({ setCurrentPage, goBack }: CashChargeProps) {
+export default function CashCharge({
+  setCurrentPage,
+  goBack,
+}: CashChargeProps) {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* 헤더 */}
       <header className="sticky top-0 z-50 bg-white px-4 py-3 flex items-center">
         <button
           className="flex items-center gap-1 text-gray-700"
-          onClick={() => goBack ? goBack() : setCurrentPage("DailyReward")}
+          onClick={() => (goBack ? goBack() : setCurrentPage("DailyReward"))}
         >
           <svg
             className="w-5 h-5"

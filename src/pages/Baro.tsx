@@ -132,7 +132,10 @@ export default function Baro({
           >
             사용내역
           </button>
-          <button className="px-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-600">
+          <button
+            className="px-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-600"
+            onClick={() => setCurrentPage?.("gallery-barossalmuk")}
+          >
             바로쌀먹
             <br />
             <span className="text-[10px]">게시판</span>

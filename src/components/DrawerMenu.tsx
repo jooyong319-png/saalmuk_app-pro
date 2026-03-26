@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useInterest } from "./community/InterestContext";
+import { useRecent } from "./community/RecentContext";
 
 export default function DrawerMenu({
   open,
@@ -17,6 +19,12 @@ export default function DrawerMenu({
 }) {
   const [closing, setClosing] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  // 관심 컨텍스트에서 데이터 가져오기
+  const { groups } = useInterest();
+
+  // 최근 본 컨텍스트에서 데이터 가져오기
+  const { recentGalleries, getVisitedTimeText } = useRecent();
 
   if (!open) return null;
 
@@ -37,66 +45,34 @@ export default function DrawerMenu({
     setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const isOpen = (key: string) => !collapsed[key];
+  const isOpen = (key: string) => {
+    if (key === "recent") {
+      return collapsed[key] !== false; // 기본 열림
+    }
+    return collapsed[key] === true; // 나머지는 기본 접힘
+  };
 
-  const recentCommunity = [
-    {
-      name: "메이플스토리 채널",
-      icon: "🍁",
-      sub: "3분 전",
-      page: "channelDetail",
-    },
-    {
-      name: "발로란트 채널",
-      icon: "🎯",
-      sub: "1시간 전",
-      page: "channelDetail",
-    },
-    { name: "자유게시판", icon: "💬", sub: "2시간 전", page: "channelDetail" },
-  ];
+  // 관심 데이터 (컨텍스트에서 가져온 모든 채널)
+  const interestItems = groups.flatMap((group) =>
+    group.channels.map((channel) => ({
+      name: channel.name,
+      id: channel.id,
+      page: `gallery-${channel.id}`,
+    })),
+  );
 
-  const recentGames = [
-    { name: "아이온2", icon: "⚔️", sub: "2시간 전", page: "samurai" },
-    { name: "마비노기 모바일", icon: "🎵", sub: "어제", page: "samurai" },
-  ];
+  // 최근 본 데이터 (컨텍스트에서 가져옴)
+  const recentItems = recentGalleries.map((g) => ({
+    ...g,
+    visitedAtText: getVisitedTimeText(g.visitedAt),
+    page: `gallery-${g.id}`,
+  }));
 
-  const following = [
-    {
-      name: "블루 아카이브",
-      icon: "💙",
-      sub: "8.7만",
-      page: "channelDetail-profile",
-    },
-    {
-      name: "리그 오브 레전드",
-      icon: "⚡",
-      sub: "45.2만",
-      page: "channelDetail-profile",
-    },
-    { name: "원신", icon: "🌟", sub: "32.1만", page: "channelDetail-profile" },
-  ];
-
-  const interestCommunity = [
-    {
-      name: "RPG 게이머 모임",
-      icon: "🛡️",
-      sub: "1.2만명",
-      page: "channelDetail",
-    },
-    { name: "쌀먹 꿀팁", icon: "🍚", sub: "8,400명", page: "channelDetail" },
-    {
-      name: "모바일게임 리뷰",
-      icon: "📱",
-      sub: "5,600명",
-      page: "channelDetail",
-    },
-  ];
-
-  const interestGames = [
-    { emoji: "⚔️", name: "RPG", page: "samurai" },
-    { emoji: "🏎️", name: "레이싱", page: "samurai" },
-    { emoji: "🧩", name: "퍼즐", page: "samurai" },
-    { emoji: "🏰", name: "전략", page: "samurai" },
+  // 생활테크 데이터
+  const lifeTechItems = [
+    { name: "이벤트", page: "DailyReward" },
+    { name: "장터", page: "DailyReward-market" },
+    { name: "내 쿠폰함", page: "DailyReward-myCoupons" },
   ];
 
   return (
@@ -121,151 +97,158 @@ export default function DrawerMenu({
       >
         {isLoggedIn ? (
           <div className="flex-1 overflow-y-auto">
-            {/* 오늘의 쌀먹 배너 */}
-            <div
-              className="mx-4 mt-4 mb-3 rounded-2xl p-4"
-              style={{
-                background: "linear-gradient(135deg, #72C2FF 0%, #4A9FD9 100%)",
-              }}
-            >
+            {/* 프로필 + 채팅 */}
+            <div className="px-5 pt-5 pb-5 border-b border-[#72C2FF]/30 bg-gradient-to-br from-[#72C2FF] via-[#8ECFFF] to-[#AADBFF]">
+              {/* 로고 */}
+              <img
+                src="https://app.ssalmuk.com/images/m_img/Logo_ssalmuk.svg"
+                alt="쌀먹"
+                className="h-5 mb-4 opacity-90"
+              />
               <div className="flex items-center gap-3">
-                <span className="text-3xl">🍚</span>
+                <img
+                  src="https://edge.ssalmuk.com/editorImage/452483c1a34849f19fdd91b084f6cc6d.png"
+                  alt="프로필"
+                  className="w-14 h-14 rounded-full object-cover shadow-md border-2 border-white/30"
+                />
                 <div className="flex-1">
-                  <p className="text-white font-bold text-base">오늘의 쌀먹</p>
-                  <p className="text-white/70 text-xs mt-0.5">
-                    +3,450 포인트 · 28일 연속 출석
+                  <p className="font-bold text-white text-[17px]">쌀먹유저</p>
+                  <p className="text-white/80 text-[14px] mt-0.5 font-semibold">
+                    3,450 P
                   </p>
                 </div>
+                {/* 채팅 아이콘 */}
+                <button
+                  onClick={() => navigate("chat")}
+                  className="relative p-2 rounded-full active:bg-white/20 transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  {/* 뱃지 */}
+                  <div className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border border-white/50">
+                    <span className="text-[10px] text-white font-bold">3</span>
+                  </div>
+                </button>
               </div>
             </div>
 
-            {/* 최근 본 커뮤니티 */}
+            {/* 최근 본 */}
             <Accordion
-              title="최근 본 커뮤니티"
-              isOpen={isOpen("rc")}
-              onToggle={() => toggle("rc")}
+              title="최근 본"
+              isOpen={isOpen("recent")}
+              onToggle={() => toggle("recent")}
             >
-              {recentCommunity.map((c) => (
-                <Row
-                  key={c.name}
-                  icon={c.icon}
-                  label={c.name}
-                  sub={c.sub}
-                  onClick={() => navigate(c.page)}
-                />
-              ))}
-            </Accordion>
-
-            {/* 최근 본 게임 */}
-            <Accordion
-              title="최근 본 게임"
-              isOpen={isOpen("rg")}
-              onToggle={() => toggle("rg")}
-            >
-              {recentGames.map((g) => (
-                <Row
-                  key={g.name}
-                  icon={g.icon}
-                  label={g.name}
-                  sub={g.sub}
-                  onClick={() => navigate(g.page)}
-                />
-              ))}
-            </Accordion>
-
-            {/* 팔로잉 */}
-            <Accordion
-              title="팔로잉"
-              isOpen={isOpen("fw")}
-              onToggle={() => toggle("fw")}
-            >
-              {following.map((f) => (
-                <Row
-                  key={f.name}
-                  icon={f.icon}
-                  label={f.name}
-                  sub={f.sub}
-                  onClick={() => navigate(f.page)}
-                />
-              ))}
-            </Accordion>
-
-            {/* 관심 커뮤니티 */}
-            <Accordion
-              title="관심 커뮤니티"
-              isOpen={isOpen("ic")}
-              onToggle={() => toggle("ic")}
-            >
-              {interestCommunity.map((c) => (
-                <Row
-                  key={c.name}
-                  icon={c.icon}
-                  label={c.name}
-                  sub={c.sub}
-                  onClick={() => navigate(c.page)}
-                />
-              ))}
-            </Accordion>
-
-            {/* 관심 게임 */}
-            <Accordion
-              title="관심 게임"
-              isOpen={isOpen("ig")}
-              onToggle={() => toggle("ig")}
-            >
-              <div className="px-5 pb-3 flex flex-wrap gap-2">
-                {interestGames.map((g) => (
+              {recentItems.length > 0 ? (
+                <>
+                  {recentItems.slice(0, 3).map((item) => (
+                    <Row
+                      key={item.id}
+                      label={item.name}
+                      sub={item.visitedAtText}
+                      onClick={() => navigate(item.page)}
+                    />
+                  ))}
                   <button
-                    key={g.name}
-                    className="inline-flex items-center gap-1 px-3 py-2 bg-gray-100 rounded-full text-sm text-gray-700 active:bg-gray-200"
-                    onClick={() => navigate(g.page)}
+                    onClick={() => {
+                      navigate("community");
+                      // 최근 본 탭으로 이동하는 로직 필요시 추가
+                    }}
+                    className="w-full px-5 py-2 text-[13px] text-[#72C2FF] font-medium text-left active:bg-gray-100 transition-colors"
                   >
-                    {g.emoji} {g.name}
+                    갤러리 최근 본으로 이동 →
                   </button>
-                ))}
-              </div>
+                </>
+              ) : (
+                <p className="px-5 py-3 text-[13px] text-gray-400">
+                  최근 본 갤러리가 없습니다
+                </p>
+              )}
+            </Accordion>
+
+            {/* 관심 */}
+            <Accordion
+              title="관심"
+              isOpen={isOpen("interest")}
+              onToggle={() => toggle("interest")}
+            >
+              {interestItems.length > 0 ? (
+                <>
+                  {interestItems.slice(0, 3).map((item) => (
+                    <Row
+                      key={item.id}
+                      label={item.name}
+                      onClick={() => navigate(item.page)}
+                    />
+                  ))}
+                  <button
+                    onClick={() => {
+                      navigate("community");
+                      // 관심 탭으로 이동하는 로직 필요시 추가
+                    }}
+                    className="w-full px-5 py-2 text-[13px] text-[#72C2FF] font-medium text-left active:bg-gray-100 transition-colors"
+                  >
+                    갤러리 관심으로 이동 →
+                  </button>
+                </>
+              ) : (
+                <p className="px-5 py-3 text-[13px] text-gray-400">
+                  관심 갤러리가 없습니다
+                </p>
+              )}
+            </Accordion>
+
+            {/* 생활테크 */}
+            <Accordion
+              title="생활테크"
+              isOpen={isOpen("lifetech")}
+              onToggle={() => toggle("lifetech")}
+            >
+              {lifeTechItems.map((item) => (
+                <Row
+                  key={item.name}
+                  label={item.name}
+                  onClick={() => navigate(item.page)}
+                />
+              ))}
             </Accordion>
 
             {/* 고객센터 */}
             <Accordion
               title="고객센터"
-              isOpen={isOpen("cs")}
-              onToggle={() => toggle("cs")}
+              isOpen={isOpen("feedback")}
+              onToggle={() => toggle("feedback")}
             >
-              <button
-                className="w-full px-5 py-2.5 flex items-center gap-3 active:bg-gray-50"
-                onClick={() => navigate("inquiry")}
-              >
-                <span className="text-lg">💌</span>
-                <span className="text-[15px] text-gray-700">1:1 문의</span>
-              </button>
-              <button
-                className="w-full px-5 py-2.5 flex items-center gap-3 active:bg-gray-50"
-                onClick={() => navigate("faq")}
-              >
-                <span className="text-lg">❓</span>
-                <span className="text-[15px] text-gray-700">
-                  자주 묻는 질문
-                </span>
-              </button>
-              <button
-                className="w-full px-5 py-2.5 flex items-center gap-3 active:bg-gray-50"
-                onClick={() => navigate("hotNow")}
-              >
-                <span className="text-lg">📢</span>
-                <span className="text-[15px] text-gray-700">공지사항</span>
-              </button>
+              <Row label="의견" onClick={() => navigate("inquiry")} />
+              <Row label="자주 묻는 질문" onClick={() => navigate("faq")} />
+              <Row label="공지사항" onClick={() => navigate("hotNow")} />
             </Accordion>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col pt-5">
-            <div className="px-5 py-5 border-b border-gray-100">
-              <p className="text-base text-gray-500 mb-3">
+          /* 비로그인 상태 */
+          <div className="flex-1 flex flex-col">
+            <div className="px-5 pt-5 pb-6 border-b border-[#72C2FF]/30 bg-gradient-to-br from-[#72C2FF] via-[#8ECFFF] to-[#AADBFF]">
+              {/* 로고 */}
+              <img
+                src="https://app.ssalmuk.com/images/m_img/Logo_ssalmuk.svg"
+                alt="쌀먹"
+                className="h-5 mb-4 opacity-90"
+              />
+              <p className="text-[15px] text-white/90 mb-4">
                 로그인하고 쌀먹 혜택을 받아보세요
               </p>
               <button
-                className="w-full py-3.5 rounded-xl text-base font-bold text-white active:opacity-90"
-                style={{ backgroundColor: "#72C2FF" }}
+                className="w-full py-3.5 rounded-xl text-base font-bold text-[#72C2FF] bg-white active:bg-gray-100"
                 onClick={() => {
                   onLoginClick();
                   handleClose();
@@ -275,30 +258,11 @@ export default function DrawerMenu({
               </button>
             </div>
 
+            {/* 비로그인 - 고객센터만 */}
             <Accordion title="고객센터" isOpen={true} onToggle={() => {}}>
-              <button
-                className="w-full px-5 py-2.5 flex items-center gap-3 active:bg-gray-50"
-                onClick={() => navigate("inquiry")}
-              >
-                <span className="text-lg">💌</span>
-                <span className="text-[15px] text-gray-700">1:1 문의</span>
-              </button>
-              <button
-                className="w-full px-5 py-2.5 flex items-center gap-3 active:bg-gray-50"
-                onClick={() => navigate("faq")}
-              >
-                <span className="text-lg">❓</span>
-                <span className="text-[15px] text-gray-700">
-                  자주 묻는 질문
-                </span>
-              </button>
-              <button
-                className="w-full px-5 py-2.5 flex items-center gap-3 active:bg-gray-50"
-                onClick={() => navigate("hotNow")}
-              >
-                <span className="text-lg">📢</span>
-                <span className="text-[15px] text-gray-700">공지사항</span>
-              </button>
+              <Row label="의견" onClick={() => navigate("inquiry")} />
+              <Row label="자주 묻는 질문" onClick={() => navigate("faq")} />
+              <Row label="공지사항" onClick={() => navigate("hotNow")} />
             </Accordion>
 
             <div className="flex-1" />
@@ -306,7 +270,7 @@ export default function DrawerMenu({
         )}
 
         {/* 하단 */}
-        <div className="border-t border-gray-100 px-5 py-3.5 flex items-center justify-between">
+        <div className="border-t border-gray-200 px-5 py-3.5 flex items-center justify-between">
           {isLoggedIn ? (
             <button
               className="text-sm text-gray-400"
@@ -346,12 +310,14 @@ function Accordion({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-b border-gray-100">
+    <div className="border-b border-gray-200">
       <button
-        className="w-full px-5 py-3.5 flex items-center justify-between"
+        className="w-full px-5 py-3.5 flex items-center gap-2 active:bg-gray-100 transition-colors"
         onClick={onToggle}
       >
-        <span className="text-sm font-bold text-gray-500">{title}</span>
+        <span className="text-[15px] font-semibold text-gray-800 flex-1 text-left">
+          {title}
+        </span>
         <svg
           className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
           fill="none"
@@ -372,26 +338,23 @@ function Accordion({
 }
 
 function Row({
-  icon,
   label,
   sub,
   onClick,
 }: {
-  icon: string;
   label: string;
-  sub: string;
+  sub?: string;
   onClick?: () => void;
 }) {
   return (
     <button
-      className="w-full px-5 py-2 flex items-center gap-3 active:bg-gray-50"
+      className="w-full px-5 py-2.5 flex items-center gap-3 active:bg-gray-100 transition-colors"
       onClick={onClick}
     >
-      <span className="text-lg">{icon}</span>
       <span className="text-[15px] text-gray-800 flex-1 truncate text-left">
         {label}
       </span>
-      <span className="text-xs text-gray-400 shrink-0">{sub}</span>
+      {sub && <span className="text-xs text-gray-400 shrink-0">{sub}</span>}
     </button>
   );
 }

@@ -1,201 +1,173 @@
 import { useState } from "react";
-import type { GalleryItemData } from "../gallery/types";
-import { useToast } from "./Toast";
-import { galleryTabs, galleryCategories } from "../gallery/galleryData";
-import GalleryCard, { GalleryCardCompact } from "../gallery/GalleryCard";
+import type { GalleryItemData } from "./galleryData";
+import {
+  galleryTabs,
+  galleryCategories,
+  getGalleryIdByName,
+} from "./galleryData";
 
 interface AllChannelsContentProps {
   setCurrentPage: (page: string) => void;
 }
 
-export default function AllChannelsContent({ setCurrentPage }: AllChannelsContentProps) {
-  const { showToast } = useToast();
+// 서브탭 정의
+const subTabs = ["전체", "모바일게임", "PC게임", "P2E 게임"];
+
+// 서브탭과 카테고리 title 매핑
+const subTabCategoryMap: Record<string, string> = {
+  모바일게임: "모바일 게임",
+  PC게임: "PC 게임",
+  "P2E 게임": "P2E 게임",
+};
+
+export default function AllChannelsContent({
+  setCurrentPage,
+}: AllChannelsContentProps) {
   const [activeTab, setActiveTab] = useState("주요채널");
-  const [followedGalleries, setFollowedGalleries] = useState<number[]>([]);
-  const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [activeSubTab, setActiveSubTab] = useState("전체");
 
-  const toggleFollow = (id: number, name: string) => {
-    const isFollowing = followedGalleries.includes(id);
-    setFollowedGalleries((prev) =>
-      isFollowing ? prev.filter((gid) => gid !== id) : [...prev, id]
-    );
-    showToast(
-      isFollowing
-        ? `${name} 팔로우를 취소했어요`
-        : `${name}의 새 글이 올라오면 알려드릴게요`
-    );
-  };
-
-  const toggleCategory = (catIdx: number) => {
-    setExpandedCategories((prev) =>
-      prev.includes(catIdx) ? prev.filter((i) => i !== catIdx) : [...prev, catIdx]
-    );
-  };
+  // viewMode 제거됨 - 2열 고정
+  // followedGalleries 제거됨 - 팔로우 버튼 없음
+  // expandedCategories 제거됨 - 더보기 버튼 없음
 
   const handleItemClick = (item: GalleryItemData) => {
+    // 지금 핫한 → 피드의 "지금 핫한" 탭
     if (item.name === "지금 핫한") {
-      setCurrentPage("hot");
+      setCurrentPage("nav-hot");
+      return;
+    }
+
+    // 사전예약, 신서버 → 게임 이벤트 페이지
+    if (item.name === "사전예약, 신서버") {
+      setCurrentPage("preorder");
+      return;
+    }
+
+    // galleryData에서 이름으로 ID 찾기
+    const galleryId = getGalleryIdByName(item.name);
+    if (galleryId) {
+      setCurrentPage(`gallery-${galleryId}`);
     } else {
-      setCurrentPage("channelDetail");
+      // fallback - 메이플로
+      setCurrentPage("gallery-maplestory");
     }
   };
 
-  // 검색 필터링
-  const filteredCategories = galleryCategories.map((cat) => ({
-    ...cat,
-    items: searchQuery
-      ? cat.items.filter(
-          (item) =>
-            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.desc.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      : cat.items,
-  })).filter((cat) => cat.items.length > 0);
+  // 서브탭에 따라 카테고리 필터링
+  const filteredCategories =
+    activeSubTab === "전체"
+      ? galleryCategories
+      : galleryCategories.filter(
+          (cat) => cat.title === subTabCategoryMap[activeSubTab],
+        );
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-white px-4 pt-3 pb-2 border-b border-gray-100">
-        {/* 탭 */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {galleryTabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-all ${
-                  activeTab === tab
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-100 text-gray-500 active:bg-gray-200"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {/* 보기 전환 */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
+        {/* 메인 탭 */}
+        <div className="flex items-center gap-2 px-4 pt-3 pb-2">
+          {galleryTabs.map((tab) => (
             <button
-              onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded-md transition-colors ${
-                viewMode === "list" ? "bg-white shadow-sm" : "text-gray-400"
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-all ${
+                activeTab === tab
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-500 active:bg-gray-200"
               }`}
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" />
-              </svg>
+              {tab}
             </button>
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded-md transition-colors ${
-                viewMode === "grid" ? "bg-white shadow-sm" : "text-gray-400"
-              }`}
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z" />
-              </svg>
-            </button>
-          </div>
+          ))}
         </div>
 
-        {/* 검색바 */}
-        <div className="mt-3 relative">
-          <input
-            type="text"
-            placeholder="갤러리 검색"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-100 rounded-xl px-4 py-2.5 pl-10 text-[14px] outline-none focus:ring-2 focus:ring-[#72C2FF]/30"
-          />
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          {searchQuery && (
+        {/* 서브탭 */}
+        <div className="flex items-center gap-2 px-4 pb-3 overflow-x-auto">
+          {subTabs.map((tab) => (
             <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center"
+              key={tab}
+              onClick={() => setActiveSubTab(tab)}
+              className={`px-3 py-1.5 text-[12px] font-medium rounded-full whitespace-nowrap transition-all ${
+                activeSubTab === tab
+                  ? "bg-[#72C2FF] text-white"
+                  : "bg-gray-100 text-gray-500 active:bg-gray-200"
+              }`}
             >
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              {tab}
             </button>
-          )}
+          ))}
         </div>
       </div>
 
       {/* 카테고리별 목록 */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {filteredCategories.length === 0 ? (
-          <div className="py-20 text-center">
-            <p className="text-5xl mb-4">🔍</p>
-            <p className="text-[16px] font-semibold text-gray-500 mb-2">검색 결과가 없어요</p>
-            <p className="text-[14px] text-gray-400">다른 키워드로 검색해보세요</p>
-          </div>
-        ) : (
-          filteredCategories.map((category, catIdx) => (
-            <div
-              key={catIdx}
-              className="mb-6 animate-fadeUp"
-              style={{ animationDelay: `${catIdx * 80}ms` }}
-            >
-              {/* 카테고리 헤더 */}
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[15px] font-bold text-gray-900">{category.title}</h3>
-                <span className="text-[12px] text-gray-400">{category.items.length}개</span>
-              </div>
-
-              {/* 아이템 목록 */}
-              {viewMode === "list" ? (
-                <div className="flex flex-col gap-2">
-                  {(expandedCategories.includes(catIdx)
-                    ? category.items
-                    : category.items.slice(0, 4)
-                  ).map((item, index) => (
-                    <div key={item.id} className="animate-fadeUp" style={{ animationDelay: `${index * 40}ms` }}>
-                      <GalleryCard
-                        item={item}
-                        isFollowed={followedGalleries.includes(item.id)}
-                        onToggleFollow={() => toggleFollow(item.id, item.name)}
-                        onClick={() => handleItemClick(item)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 gap-2">
-                  {(expandedCategories.includes(catIdx)
-                    ? category.items
-                    : category.items.slice(0, 8)
-                  ).map((item, index) => (
-                    <div key={item.id} className="animate-fadeUp" style={{ animationDelay: `${index * 30}ms` }}>
-                      <GalleryCardCompact item={item} onClick={() => handleItemClick(item)} />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* 더보기 / 접기 */}
-              {category.items.length > (viewMode === "list" ? 4 : 8) && (
-                <button
-                  onClick={() => toggleCategory(catIdx)}
-                  className="w-full mt-3 py-2.5 text-[13px] text-gray-400 font-medium bg-white border border-gray-100 rounded-xl active:bg-gray-50 transition-colors"
-                >
-                  {expandedCategories.includes(catIdx)
-                    ? "접기 ↑"
-                    : `더보기 (${category.items.length - (viewMode === "list" ? 4 : 8)}개) ↓`}
-                </button>
-              )}
+        {filteredCategories.map((category, catIdx) => (
+          <div
+            key={catIdx}
+            className="mb-6 animate-fadeUp"
+            style={{ animationDelay: `${catIdx * 80}ms` }}
+          >
+            {/* 카테고리 헤더 - 개수 제거 */}
+            <div className="flex items-center mb-3">
+              <h3 className="text-[15px] font-bold text-gray-900">
+                {category.title}
+              </h3>
             </div>
-          ))
-        )}
+
+            {/* 아이템 목록 - 2열 그리드 */}
+            <div className="grid grid-cols-2 gap-2">
+              {(activeTab === "주요채널"
+                ? category.items.slice(0, 4) // 주요채널: 4개만 표시
+                : category.items
+              ) // 일반채널: 전체 표시
+                .map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="animate-fadeUp"
+                    style={{ animationDelay: `${index * 30}ms` }}
+                  >
+                    <GalleryCard2Col
+                      item={item}
+                      onClick={() => handleItemClick(item)}
+                    />
+                  </div>
+                ))}
+            </div>
+
+            {/* 더보기 버튼 제거됨 */}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ===== 2열용 갤러리 카드 (팔로우 버튼 없음) =====
+interface GalleryCard2ColProps {
+  item: GalleryItemData;
+  onClick?: () => void;
+}
+
+function GalleryCard2Col({ item, onClick }: GalleryCard2ColProps) {
+  return (
+    <div
+      className="flex items-center gap-2.5 p-3 bg-white border border-gray-100 rounded-xl active:bg-gray-50 transition-all"
+      onClick={onClick}
+    >
+      {/* 아이콘 */}
+      <div
+        className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-bold shrink-0 ${item.color}`}
+      >
+        {item.icon}
+      </div>
+
+      {/* 정보 */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-bold text-gray-900 truncate">
+          {item.name}
+        </p>
+        <p className="text-[10px] text-gray-400 truncate mt-0.5">{item.desc}</p>
       </div>
     </div>
   );

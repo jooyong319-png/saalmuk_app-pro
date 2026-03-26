@@ -32,6 +32,13 @@ export interface PostData {
   isVerified?: boolean;
   createdAt: number;
   images?: string[];
+  category?: string;
+  poll?: {
+    question: string;  // ← 이 줄 추가
+    options: { text: string; votes: number }[];
+    totalVotes: number;
+    votedOption?: number;
+  };
 }
 
 // ===== 댓글 =====

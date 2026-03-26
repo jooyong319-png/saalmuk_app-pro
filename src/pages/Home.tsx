@@ -101,32 +101,40 @@ export default function Home({
     },
   ];
 
-  // 오늘의 인기 생활쌀먹
+  // 오늘의 인기 생활테크
   const popularItems = [
-    { id: 1, rank: "01", title: "[네이버페이] 46원", comments: 2, isHot: true },
+    {
+      id: 1,
+      rank: "01",
+      title: "[CU편의점] 12월 행운퀴즈 이벤트",
+      comments: 89,
+      isHot: true,
+    },
     {
       id: 2,
       rank: "02",
-      title: "[한국지식재산보호원] 특허 상식 퀴즈",
-      comments: 1,
+      title: "[스타벅스] 겨울 신메뉴 출시 기념",
+      comments: 123,
+      isHot: true,
     },
     {
       id: 3,
       rank: "03",
-      title: "[국가보훈부] 온라인 채널 만족도 조사",
-      comments: 0,
+      title: "[맥도날드] 빅맥 50주년 퀴즈",
+      comments: 234,
+      isHot: true,
     },
     {
       id: 4,
       rank: "04",
-      title: "[한국만화영상진흥원] 만진원의 창...",
-      comments: 1,
+      title: "[GS25] 와인 페스티벌 이벤트",
+      comments: 45,
     },
     {
       id: 5,
       rank: "05",
-      title: "[군인공제회] 크리스마스 맞이 OX퀴...",
-      comments: 1,
+      title: "[올리브영] 신년맞이 럭키드로우",
+      comments: 34,
     },
   ];
 
@@ -315,25 +323,28 @@ export default function Home({
         </div>
       </div>
 
-      {/* 오늘의 인기 생활쌀먹 */}
+      {/* 오늘의 인기 생활테크 */}
       <div className="px-4 py-4 bg-white mt-2 rounded-2xl">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-gray-900">오늘의 인기 생활쌀먹</h3>
+          <h3 className="font-bold text-gray-900">오늘의 인기 생활테크</h3>
           <button
             className="text-gray-400 text-sm flex items-center gap-1"
-            onClick={() => setCurrentPage("DailyReward")}
+            onClick={() => {
+              setCurrentPage("DailyReward");
+              setActiveNav("life");
+            }}
           >
             더보기 <span>›</span>
           </button>
         </div>
-        <div
-          className="space-y-3"
-          onClick={() => setCurrentPage(`dailyEventDetail`)}
-        >
+        <div className="space-y-3">
           {popularItems.map((item) => (
             <div
               key={item.id}
               className="flex items-center gap-3 cursor-pointer"
+              onClick={() =>
+                setCurrentPage(`DailyReward-eventDetail-${item.id}`)
+              }
             >
               <span
                 className={`text-sm font-bold ${

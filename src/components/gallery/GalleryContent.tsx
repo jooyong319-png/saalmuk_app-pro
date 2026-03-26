@@ -1,8 +1,8 @@
 import { useState } from "react";
-import type { GalleryItemData } from "../components/gallery/types";
-import { galleryTabs, galleryCategories } from "../components/gallery/galleryData";
-import GalleryCard, { GalleryCardCompact } from "../components/gallery/GalleryCard";
-import { ToastProvider, useToast } from "../components/community/Toast";
+import type { GalleryItemData } from "./types";
+import { galleryTabs, galleryCategories } from "./galleryData";
+import GalleryCard, { GalleryCardCompact } from "./GalleryCard";
+import { ToastProvider, useToast } from "../community/Toast";
 
 // ===== 애니메이션 스타일 =====
 const animationStyles = `
@@ -20,7 +20,10 @@ interface GalleryContentProps {
 }
 
 // ===== 메인 컨텐츠 =====
-function GalleryContentInner({ onSelectGallery, onNavigateToHot }: GalleryContentProps) {
+function GalleryContentInner({
+  onSelectGallery,
+  onNavigateToHot,
+}: GalleryContentProps) {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState("주요채널");
   const [followedGalleries, setFollowedGalleries] = useState<number[]>([]);
@@ -30,18 +33,20 @@ function GalleryContentInner({ onSelectGallery, onNavigateToHot }: GalleryConten
   const toggleFollow = (id: number, name: string) => {
     const isFollowing = followedGalleries.includes(id);
     setFollowedGalleries((prev) =>
-      isFollowing ? prev.filter((gid) => gid !== id) : [...prev, id]
+      isFollowing ? prev.filter((gid) => gid !== id) : [...prev, id],
     );
     showToast(
       isFollowing
         ? `${name} 팔로우를 취소했어요`
-        : `${name}의 새 글이 올라오면 알려드릴게요`
+        : `${name}의 새 글이 올라오면 알려드릴게요`,
     );
   };
 
   const toggleCategory = (catIdx: number) => {
     setExpandedCategories((prev) =>
-      prev.includes(catIdx) ? prev.filter((i) => i !== catIdx) : [...prev, catIdx]
+      prev.includes(catIdx)
+        ? prev.filter((i) => i !== catIdx)
+        : [...prev, catIdx],
     );
   };
 
@@ -100,28 +105,6 @@ function GalleryContentInner({ onSelectGallery, onNavigateToHot }: GalleryConten
               </svg>
             </button>
           </div>
-        </div>
-
-        {/* 검색바 */}
-        <div className="mt-3 relative">
-          <input
-            type="text"
-            placeholder="갤러리 검색"
-            className="w-full bg-gray-100 rounded-xl px-4 py-2.5 pl-10 text-[14px] outline-none focus:ring-2 focus:ring-[#72C2FF]/30"
-          />
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
         </div>
       </div>
 

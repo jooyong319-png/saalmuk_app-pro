@@ -21,5 +21,6 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],
+  "exclude": ["src/Web_extracted", "src/Web (1).html", "src/lifetech_market_v5.html"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

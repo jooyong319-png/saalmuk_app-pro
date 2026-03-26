@@ -24,7 +24,7 @@ export default function ReportPopup({
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+    <div className="fixed inset-0 z-[10003] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
       <div
         className="relative bg-white rounded-2xl w-[320px] overflow-hidden shadow-xl"
@@ -82,7 +82,9 @@ export default function ReportPopup({
             onClick={() => selectedReason && onReport(selectedReason)}
             disabled={!selectedReason}
             className={`flex-1 py-3 text-[15px] font-semibold text-white rounded-xl transition-colors ${
-              selectedReason ? "bg-[#72C2FF] active:bg-[#5AB0F0]" : "bg-gray-300"
+              selectedReason
+                ? "bg-[#72C2FF] active:bg-[#5AB0F0]"
+                : "bg-gray-300"
             }`}
           >
             신고하기
